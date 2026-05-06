@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hafsa 👸</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="loading">
+        <div class="heart-loader"></div>
+    </div>
+    <div class="blobs" aria-hidden="true">
+        <div class="blob a"></div>
+        <div class="blob b"></div>
+        <div class="blob c"></div>
+    </div>
+    <div class="container">
+        <div class="floating-hearts">
+            <div class="heart">✨</div>
+            <div class="heart">✦</div>
+            <div class="heart">✧</div>
+            <div class="heart">✺</div>
+            <div class="heart">✶</div>
+        </div>
+        <header>
+            <h1 class="title">Hafsa 👸</h1>
+        </header>
+        <main>
+            <div class="card">
+                <p class="message">
+                    You are not just special… you are one of a kind.<br>
+                    There is something about you that no one else has.<br><br>
+                    I'm proud of you — always.<br>
+                    Not just for what you do, but for who you are.<br><br>
+                    You're rare. And I'm lucky to know you. 💖
+                </p>
+                <button class="heart-button" id="heartButton">Open my heart ❤️</button>
+            </div>
+            <div class="images">
+                <img src="image1.jpg" alt="Hafsa photo 1" class="image" loading="lazy">
+                <img src="image2.jpg" alt="Hafsa photo 2" class="image" loading="lazy">
+                <img src="image3.jpg" alt="Hafsa photo 3" class="image" loading="lazy">
+            </div>
+        </main>
+        <footer>
+            <p class="footer-text">Marwo 👸</p>
+        </footer>
+        <audio id="bgMusic" loop>
+            <source src="romantic-music.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <button class="mute-button" id="muteButton" aria-label="Toggle music">🔊</button>
+        <div id="overlay" class="overlay" aria-hidden="true"></div>
+        <div id="heartModal" class="modal" role="dialog" aria-hidden="true">
+            <div class="modal-card">
+                <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+                <p class="modal-message">Wan ku jeclahy, Waana kugu faana.</p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
