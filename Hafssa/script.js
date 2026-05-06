@@ -3,21 +3,20 @@ window.addEventListener('load', function() {
     setTimeout(function() {
         document.querySelector('.loading').style.display = 'none';
         document.querySelector('.container').style.display = 'block';
-    }, 2000); // 2 seconds loading
+    }, 1800); // short, pleasant loading
 });
 
 // Background music
 const bgMusic = document.getElementById('bgMusic');
 const muteButton = document.getElementById('muteButton');
 
-bgMusic.volume = 0.3; // Set volume to 30%
-
-// Autoplay music (may be blocked by browser, but try)
-bgMusic.play().catch(function() {
-    // Autoplay failed, user interaction required
-});
+if (bgMusic) {
+    bgMusic.volume = 0.28; // gentle volume
+    bgMusic.play().catch(() => {});
+}
 
 muteButton.addEventListener('click', function() {
+    if (!bgMusic) return;
     if (bgMusic.muted) {
         bgMusic.muted = false;
         muteButton.textContent = '🔊';
@@ -27,29 +26,37 @@ muteButton.addEventListener('click', function() {
     }
 });
 
-// Heart button click animation
+// Heart/button element
 const heartButton = document.getElementById('heartButton');
-heartButton.addEventListener('click', function() {
-    this.classList.add('active');
-    setTimeout(() => this.classList.remove('active'), 250);
-    // reveal overlay and create sparkles
-    document.getElementById('overlay').classList.add('show');
-    createSparklesAround(heartButton, 16);
-    setTimeout(() => document.getElementById('overlay').classList.remove('show'), 1800);
-});
 
-// Function to create sparkles on button click
-function createSparklesAround(el, count = 8) {
+// small palette for mixed-color accents
+const SPARKLE_COLORS = ['#ff98d6','#ffd98b','#9ff5ff','#b89bff','#6fe1ff','#ffb3c9','#ffd1a6','#9be7ff'];
+
+// Sparkle keyframes injector
+const style = document.createElement('style');
+style.textContent = `
+@keyframes sparkle {
+    0% { opacity: 1; transform: scale(0); }
+    50% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(2); }
+}
+`;
+document.head.appendChild(style);
+
+// show small overlay and sparkles on click
+function createSparklesAround(el, count = 10) {
     const rect = el.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2 + window.scrollX;
     const centerY = rect.top + rect.height / 2 + window.scrollY;
     for (let i = 0; i < count; i++) {
         const sparkle = document.createElement('div');
         sparkle.className = 'sparkle';
-        sparkle.textContent = i % 2 ? '✨' : '💖';
+        sparkle.textContent = i % 2 ? '✨' : '❤';
+        sparkle.style.color = SPARKLE_COLORS[Math.floor(Math.random()*SPARKLE_COLORS.length)];
+        sparkle.style.position = 'absolute';
         document.body.appendChild(sparkle);
         const angle = Math.random() * Math.PI * 2;
-        const dist = 20 + Math.random() * 80;
+        const dist = 20 + Math.random() * 90;
         sparkle.style.left = centerX + Math.cos(angle) * 10 + 'px';
         sparkle.style.top = centerY + Math.sin(angle) * 10 + 'px';
         sparkle.style.opacity = '0';
@@ -66,42 +73,54 @@ function createSparklesAround(el, count = 8) {
         setTimeout(() => {
             sparkle.style.opacity = '0';
             sparkle.style.transform = 'scale(1.6)';
-        }, 700);
-        setTimeout(() => document.body.removeChild(sparkle), 1200);
+        }, 650 + Math.random()*300);
+        setTimeout(() => { if (sparkle && sparkle.parentNode) sparkle.parentNode.removeChild(sparkle); }, 1250);
     }
 }
 
-// Add sparkle animation to CSS via JS (since we can't modify CSS file now)
-const style = document.createElement('style');
-style.textContent = `
-@keyframes sparkle {
-    0% { opacity: 1; transform: scale(0); }
-    50% { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(2); }
-}
-`;
-document.head.appendChild(style);
+// Heart click: ripple + sparkles + modal + overlay
+if (heartButton) {
+    heartButton.addEventListener('click', function(e) {
+        // subtle press animation
+        this.classList.add('active');
+        setTimeout(() => this.classList.remove('active'), 220);
 
-// Smooth scroll for any internal links (though none here, but for future)
+        // ripple
+        const rect = this.getBoundingClientRect();
+        const r = Math.max(rect.width, rect.height);
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+        ripple.style.width = ripple.style.height = r * 2 + 'px';
+        ripple.style.left = (e.clientX - rect.left - r) + 'px';
+        ripple.style.top = (e.clientY - rect.top - r) + 'px';
+        this.appendChild(ripple);
+        requestAnimationFrame(() => { ripple.style.transform = 'scale(1)'; ripple.style.opacity = '0.9'; });
+        setTimeout(() => { ripple.style.transition = 'opacity 500ms ease'; ripple.style.opacity = '0'; }, 320);
+        setTimeout(() => { if (ripple && ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 900);
+
+        // overlay & sparkles
+        const overlay = document.getElementById('overlay');
+        if (overlay) overlay.classList.add('show');
+        createSparklesAround(this, 18);
+        setTimeout(() => { if (overlay) overlay.classList.remove('show'); }, 1600);
+
+        // show modal shortly after
+        setTimeout(() => showModal(), 260);
+    });
+}
+
+// Smooth scroll helper
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth'
-            });
-        }
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
     });
 });
 
-// Add intersection observer for scroll animations (fade in on scroll)
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver(function(entries) {
+// Intersection observer for fade-in
+const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+const observer = new IntersectionObserver(function(entries){
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             entry.target.style.opacity = '1';
@@ -110,7 +129,6 @@ const observer = new IntersectionObserver(function(entries) {
     });
 }, observerOptions);
 
-// Observe elements for scroll animations
 document.querySelectorAll('.card, .images, footer').forEach(el => {
     el.style.opacity = '0';
     el.style.transform = 'translateY(30px)';
@@ -118,26 +136,24 @@ document.querySelectorAll('.card, .images, footer').forEach(el => {
     observer.observe(el);
 });
 
-// Gentle heartbeat animation on heart button
-// replace JS heartbeat with CSS class for smoother effect
-heartButton.style.transition = 'transform 250ms ease';
-heartButton.classList.add('pulse');
+// Pulse class for heartbeat
+if (heartButton) heartButton.classList.add('pulse');
 
-// create occasional floating hearts dynamically for extra effect
-function spawnFloatingHeart() {
+// Floating symbols (dynamic)
+function spawnFloatingSymbol() {
     const h = document.createElement('div');
     h.className = 'heart';
-    h.textContent = ['💖','💕','💗','💓'][Math.floor(Math.random()*4)];
-    h.style.left = (10 + Math.random()*80) + '%';
-    h.style.fontSize = (14 + Math.random()*18) + 'px';
-    h.style.setProperty('--dur', (6 + Math.random()*6) + 's');
+    const pool = ['✦','✨','✧','❤','✶'];
+    h.textContent = pool[Math.floor(Math.random()*pool.length)];
+    h.style.left = (6 + Math.random()*86) + '%';
+    h.style.fontSize = (12 + Math.random()*20) + 'px';
+    h.style.setProperty('--dur', (6 + Math.random()*7) + 's');
     document.querySelector('.floating-hearts').appendChild(h);
-    setTimeout(() => { h.remove(); }, 10000);
+    setTimeout(() => { if (h && h.parentNode) h.parentNode.removeChild(h); }, 10000);
 }
+setInterval(spawnFloatingSymbol, 1000);
 
-setInterval(spawnFloatingHeart, 1200);
-
-// Image tilt effect based on mouse position
+// Image tilt
 document.querySelectorAll('.image').forEach(img => {
     img.style.transformStyle = 'preserve-3d';
     img.addEventListener('mousemove', e => {
@@ -148,57 +164,19 @@ document.querySelectorAll('.image').forEach(img => {
         const ry = (x * 12).toFixed(2);
         img.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
     });
-    img.addEventListener('mouseleave', () => {
-        img.style.transform = '';
-    });
+    img.addEventListener('mouseleave', () => { img.style.transform = ''; });
 });
 
-// Ripple on heart button click
-heartButton.addEventListener('click', function (e) {
-    const rect = this.getBoundingClientRect();
-    const r = Math.max(rect.width, rect.height);
-    const ripple = document.createElement('div');
-    ripple.className = 'ripple';
-    ripple.style.width = ripple.style.height = r * 2 + 'px';
-    ripple.style.left = (e.clientX - rect.left - r) + 'px';
-    ripple.style.top = (e.clientY - rect.top - r) + 'px';
-    this.appendChild(ripple);
-    requestAnimationFrame(() => { ripple.style.transform = 'scale(1)'; ripple.style.opacity = '0.9'; });
-    setTimeout(() => { ripple.style.transition = 'opacity 500ms ease'; ripple.style.opacity = '0'; }, 300);
-    setTimeout(() => ripple.remove(), 900);
-});
-
-// Modal: show Somali message when heart is tapped
+// Modal handling
 const heartModal = document.getElementById('heartModal');
 const modalClose = document.getElementById('modalClose');
-
-function showModal() {
-    heartModal.classList.add('show');
-    heartModal.setAttribute('aria-hidden', 'false');
-    document.getElementById('overlay').classList.add('show');
-}
-
-function closeModal() {
-    heartModal.classList.remove('show');
-    heartModal.setAttribute('aria-hidden', 'true');
-    document.getElementById('overlay').classList.remove('show');
-}
-
-// Show modal on heart button (tap/click)
-heartButton.addEventListener('click', function (e) {
-    // delay slightly so ripple/sparkles run first
-    setTimeout(() => showModal(), 260);
-});
-
-modalClose.addEventListener('click', closeModal);
-heartModal.addEventListener('click', e => {
-    if (e.target === heartModal) closeModal();
-});
-
-// close modal with Escape
+function showModal() { if (!heartModal) return; heartModal.classList.add('show'); heartModal.setAttribute('aria-hidden','false'); document.getElementById('overlay')?.classList.add('show'); }
+function closeModal(){ if (!heartModal) return; heartModal.classList.remove('show'); heartModal.setAttribute('aria-hidden','true'); document.getElementById('overlay')?.classList.remove('show'); }
+modalClose?.addEventListener('click', closeModal);
+heartModal?.addEventListener('click', e => { if (e.target === heartModal) closeModal(); });
 window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-// Gentle cursor-following mini hearts (performance-friendly)
+// Ripple colors for sparkles created by cursor
 let lastMove = 0;
 window.addEventListener('mousemove', e => {
     const now = Date.now();
@@ -206,11 +184,47 @@ window.addEventListener('mousemove', e => {
     lastMove = now;
     const h = document.createElement('div');
     h.className = 'sparkle';
-    h.textContent = ['❤','💖'][Math.floor(Math.random()*2)];
+    const pool = ['❤','✦','✨'];
+    h.textContent = pool[Math.floor(Math.random()*pool.length)];
     h.style.left = (e.clientX + 6) + 'px';
     h.style.top = (e.clientY + 6) + 'px';
-    h.style.fontSize = (10 + Math.random()*12) + 'px';
+    h.style.fontSize = (9 + Math.random()*14) + 'px';
+    h.style.color = SPARKLE_COLORS[Math.floor(Math.random()*SPARKLE_COLORS.length)];
     document.body.appendChild(h);
-    setTimeout(() => { h.style.transition = 'opacity 700ms ease, transform 700ms ease'; h.style.opacity = '0'; h.style.transform = 'translateY(-10px) scale(0.8)'; }, 60);
-    setTimeout(() => h.remove(), 900);
+    setTimeout(() => { h.style.transition = 'opacity 700ms ease, transform 700ms ease'; h.style.opacity = '0'; h.style.transform = 'translateY(-10px) scale(0.8)'; }, 80);
+    setTimeout(() => { if (h && h.parentNode) h.parentNode.removeChild(h); }, 900);
 });
+
+/* Floating sticker images: small 'sticker' elements using local images */
+const STICKER_IMAGES = ['image1.jpg','image2.jpg','image3.jpg'];
+const stickersRoot = document.querySelector('.stickers');
+let stickerCount = 0;
+function spawnSticker() {
+    if (!stickersRoot) return;
+    // limit on-screen stickers for performance
+    const max = window.innerWidth < 480 ? 6 : window.innerWidth < 768 ? 8 : 12;
+    if (stickerCount >= max) return;
+    const idx = Math.floor(Math.random() * STICKER_IMAGES.length);
+    const el = document.createElement('div');
+    el.className = 'sticker';
+    el.style.backgroundImage = `url(${STICKER_IMAGES[idx]})`;
+    const size = Math.floor(36 + Math.random() * 80); // px
+    el.style.setProperty('--s', size + 'px');
+    const left = Math.floor(Math.random() * 92) + '%';
+    el.style.left = left;
+    const rot = Math.floor(-30 + Math.random() * 60);
+    el.style.setProperty('--rot', rot + 'deg');
+    const dur = 8 + Math.random() * 14;
+    el.style.setProperty('--dur', dur + 's');
+    stickersRoot.appendChild(el);
+    stickerCount += 1;
+    // remove after animation
+    el.addEventListener('animationend', () => {
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+        stickerCount = Math.max(0, stickerCount - 1);
+    });
+}
+
+// spawn some stickers at start and on interval
+for (let i=0;i<6;i++) setTimeout(spawnSticker, i*450);
+setInterval(spawnSticker, 1500);
