@@ -153,6 +153,19 @@ function spawnFloatingSymbol() {
 }
 setInterval(spawnFloatingSymbol, 1000);
 
+// little button sparkle on load
+window.addEventListener('load', ()=>{
+    const btn = document.querySelector('.heart-button');
+    if (!btn) return;
+    const sparkle = document.createElement('div');
+    sparkle.className = 'btn-sparkle';
+    // ensure the button can contain absolute children
+    btn.style.position = btn.style.position || 'relative';
+    btn.appendChild(sparkle);
+    setTimeout(()=> sparkle.classList.add('show'), 450);
+    setTimeout(()=> sparkle.classList.remove('show'), 1800);
+});
+
 // Image tilt
 document.querySelectorAll('.image').forEach(img => {
     img.style.transformStyle = 'preserve-3d';
